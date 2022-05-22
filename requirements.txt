@@ -24,7 +24,7 @@ scikit-learn==1.1.1
 
 # Server
 gunicorn==20.0.4
-gevent==1.4.0
+gevent==21.12.0
 greenlet==1.1.2
 
 # Transport protocol
