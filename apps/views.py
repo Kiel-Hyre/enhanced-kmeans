@@ -9,6 +9,10 @@ from .firefly import run
 import pandas as pd
 
 
+def main(request):
+    return render(request, template_name="index.html", context={})
+
+
 class KmeansAPIView(APIView):
 
     class InputSerializer(serializers.Serializer):
