@@ -145,9 +145,9 @@ MEDIA_URL = '/media/'
 # Django REST Framework
 # https://www.django-rest-framework.org/api-guide/settings/
 
-REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
+# }
 
 
 # CORS headers
