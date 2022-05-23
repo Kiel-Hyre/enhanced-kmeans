@@ -8,6 +8,8 @@ from .firefly import run
 
 import pandas as pd
 
+import os
+
 
 def main(request):
     return render(request, template_name="index.html", context={})
@@ -16,7 +18,7 @@ def main(request):
 class KmeansAPIView(APIView):
 
     class InputSerializer(serializers.Serializer):
-        file = serializers.FileField()
+        file = serializers.FileField(required=False)
         n = serializers.FloatField(required=False)
         k = serializers.FloatField(required=False)
 
@@ -30,7 +32,9 @@ class KmeansAPIView(APIView):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        orig = pd.read_csv(serializer.validated_data["file"])
+        path = os.path.abspath(os.getcwd())
+
+        orig = pd.read_csv(serializer.validated_data.get("file", path + "/apps" + "/data.csv"))
         data = orig.copy()
 
         try:
