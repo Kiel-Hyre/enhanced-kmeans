@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import pandas as pd
 from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
@@ -182,7 +183,7 @@ def enhanced_kmeans_firefly_algo(X_PCA, X_train):
     return centroids_out, cluster_out, k, X_train
 
 
-def run(data, n=0.99, k=6):
+def run(data, orig, n=0.99, k=6):
 
   X_train = data.values
 
@@ -199,9 +200,27 @@ def run(data, n=0.99, k=6):
   }
 
   centroids_ekfa, cluster_ekfa, k, X_train = enhanced_kmeans_firefly_algo(X_PCA, X_train)
-  _d["enhanced"] = print_metrics(X_train, cluster_ekfa, ret=True)
+
+  orig["CLUSTER"] = cluster_ekfa
+
+  _e = {}
+  _e["cluster_data"] = json.loads(orig.to_json(orient="records"))
+  _e["metrics"] = print_metrics(X_train, cluster_ekfa, ret=True)
+  _e["summary"] = json.loads(
+      orig[["REGION", "CITY", "CLUSTER"]].to_json(orient="records"))
+  _e["K"] = k
+  _d["enhanced"] = _e
 
   centroids, cluster = kmeans_firefly(X_PCA, k)
-  _d["normal"] = print_metrics(X_train, cluster, ret=True)
+
+  orig["CLUSTER"] = cluster
+
+  _n = {}
+  _n["cluster_data"] = json.loads(orig.to_json(orient="records"))
+  _n["metrics"] = print_metrics(X_train, cluster, ret=True)
+  _e["summary"] = json.loads(
+      orig[["REGION", "CITY", "CLUSTER"]].to_json(orient="records"))
+  _n["K"] = k
+  _d["normal"] = _n
 
   return _d

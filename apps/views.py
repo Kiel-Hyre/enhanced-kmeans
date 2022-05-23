@@ -26,7 +26,8 @@ class KmeansAPIView(APIView):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        data = pd.read_csv(serializer.validated_data["file"])
+        orig = pd.read_csv(serializer.validated_data["file"])
+        data = orig.copy()
 
         try:
             # minimal cleaning
@@ -34,8 +35,9 @@ class KmeansAPIView(APIView):
         except:
             None
 
-        return Response({"data": run(
+        return Response(run(
             data=data,
+            orig=orig,
             n=serializer.validated_data.get("n", 0.99),
             k=serializer.validated_data.get("k", 6),
-        )})
+        ))
