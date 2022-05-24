@@ -211,6 +211,8 @@ def run(data, orig, n=0.99, k=6):
   _e["K"] = k
   _d["enhanced"] = _e
 
+  orig.to_csv("enchanced.csv", index=False)
+
   centroids, cluster = kmeans_firefly(X_PCA, k)
 
   orig["CLUSTER"] = cluster
@@ -222,5 +224,7 @@ def run(data, orig, n=0.99, k=6):
       orig[["REGION", "CITY", "CLUSTER"]].to_json(orient="records"))
   _n["K"] = k
   _d["normal"] = _n
+
+  orig.to_csv("normal.csv", index=False)
 
   return _d
