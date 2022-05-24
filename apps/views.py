@@ -34,7 +34,7 @@ class KmeansAPIView(APIView):
 
         path = os.path.abspath(os.getcwd())
 
-        orig = pd.read_csv(serializer.validated_data.get("file", path + "/apps" + "/data.csv"))
+        orig = pd.read_csv(serializer.validated_data.get("file", path + "/apps" + "/covid-ph.csv"))
         data = orig.copy()
 
         try:
