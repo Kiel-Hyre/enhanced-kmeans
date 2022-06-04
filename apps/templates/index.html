@@ -1,1 +1,411 @@
-hello
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>COVID-19 Data Dashboard</title>
+  </head>
+  <body>
+    <div id="app">
+      <v-app style="font-family: Poppins !important">
+        <v-main>
+          <v-container>
+            <div class="d-flex justify-center align-center mb-8">
+              <div class="mr-5">
+                <v-img src="{% static 'virus.png'%}" width="80px" />
+              </div>
+              <div class="d-flex flex-column align-center">
+                <span class="text-h5 font-weight-bold">
+                  COVID-19 Data Dashboard
+                </span>
+                <p class="font-weight-medium mb-0">
+                  Project of Jerico N. Contreras and Vince Andrei D. Isip
+                </p>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <v-btn
+                @click="activeTab = 'api'"
+                color="info"
+                :outlined="activeTab !== 'api'"
+                >API</v-btn
+              >
+              <v-btn
+                @click="activeTab = 'datasets'"
+                color="info"
+                :outlined="activeTab !== 'datasets'"
+                >Datasets</v-btn
+              >
+              <v-btn
+                @click="activeTab = 'upload'"
+                color="info"
+                :outlined="activeTab !== 'upload'"
+                >Upload</v-btn
+              >
+            </div>
+
+            <template v-if="activeTab === 'api'">
+              <div class="text-body-1">
+                <span>
+                  API Endpoint for Clustered Dataset of NCR and Region IV
+                </span>
+                <v-sheet
+                  color="#2c3e50"
+                  class="pa-5 rounded-lg white--text my-2"
+                  >https://covid19-ekfirefly.herokuapp.com/api/kmeans</v-sheet
+                >
+              </div>
+
+              <div class="mt-10">
+                <span class="text-h5 font-weight-medium">API</span>
+                <v-simple-table>
+                  <template #default>
+                    <thead>
+                      <tr>
+                        <th class="text-left" style="width: 20%">@params</th>
+                        <th class="text-left">Definition</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="text-body-1">
+                        <td>file</td>
+                        <td>
+                          <span>(optional) user-provided datasets</span>
+                        </td>
+                      </tr>
+                      <tr class="text-body-1">
+                        <td>k</td>
+                        <td>
+                          <span>(optional) number of clusters</span>
+                        </td>
+                      </tr>
+                      <tr class="text-body-1">
+                        <td>n</td>
+                        <td>
+                          <span>(optional) number of rows</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </template>
+                </v-simple-table>
+              </div>
+
+              <div class="my-10">
+                <span class="text-h5 font-weight-medium">Response</span>
+                <v-simple-table>
+                  <template #default>
+                    <thead>
+                      <tr>
+                        <th class="text-left" style="width: 20%">Fields</th>
+                        <th class="text-left">Definition</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="text-body-1">
+                        <td>K</td>
+                        <td>
+                          <span>number of clusters</span>
+                        </td>
+                      </tr>
+                      <tr class="text-body-1">
+                        <td>cluster_data</td>
+                        <td>
+                          <span>clustered output</span>
+                        </td>
+                      </tr>
+                      <tr class="text-body-1">
+                        <td>metrics</td>
+                        <td>
+                          <span>the performance metrics of the algorithm</span>
+                        </td>
+                      </tr>
+                      <tr class="text-body-1">
+                        <td>summary</td>
+                        <td>
+                          <span
+                            >shortened version of the clustered output (for
+                            enhanced algorithm only)</span
+                          >
+                        </td>
+                      </tr>
+                    </tbody>
+                  </template>
+                </v-simple-table>
+              </div>
+            </template>
+
+            <template v-else-if="activeTab === 'datasets'">
+              <div>
+                <span class="text-h6 d-block text-center"
+                  >Sample Clustered COVID-19 Datasets of NCR and Region IV from
+                  May 1, 2022 to May 7, 2022</span
+                >
+                <div class="d-flex mt-4">
+                  <v-text-field
+                    v-model="q"
+                    outlined
+                    placeholder="Region / City / Province"
+                    prepend-inner-icon="mdi-magnify"
+                    dense
+                    :disabled="loading"
+                  ></v-text-field>
+                  <v-select
+                    v-model="cluster"
+                    :items="datasets ? Array.from({length: datasets.enhanced.K}, (_, i) => i + 1) : []"
+                    outlined
+                    dense
+                    placeholder="Cluster"
+                    class="ml-5"
+                    style="width: 100px"
+                    clearable
+                  ></v-select>
+                  <v-spacer></v-spacer>
+                  <!-- <v-btn color="success">Export</v-btn> -->
+                </div>
+                <v-alert
+                  v-if="datasets"
+                  border="left"
+                  colored-border
+                  type="info"
+                  elevation="2"
+                >
+                  <span class="d-block info--text text-h6">Metrics</span>
+                    <div v-text="{...datasets.enhanced.metrics, K: datasets.enhanced.K}"></div>
+                </v-alert>
+                <v-card :loading="loading">
+                  <div v-if="!datasets" class="pa-5">Please wait ...</div>
+                  <div v-else>
+                    <v-simple-table>
+                      <template #default>
+                        <thead>
+                          <tr>
+                            <th
+                              v-for="(col, i) in Object.keys(datasets.enhanced.cluster_data[0])"
+                              :key="i"
+                              v-text="col"
+                            ></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(row, i) in computedDatasets">
+                            <td
+                              v-for="(col, i) in Object.keys(row)"
+                              :key="i"
+                              v-text="row[col]"
+                            ></td>
+                          </tr>
+                        </tbody>
+                      </template>
+                    </v-simple-table>
+                  </div>
+                </v-card>
+              </div>
+            </template>
+
+            <template v-else>
+              <div>
+                <template>
+                  <span class="text-h6 d-block text-center"
+                    >Upload your own COVID-19 Datasets</span
+                  >
+                  <div class="d-flex align-end">
+                    <v-file-input
+                      v-model="upload"
+                      class="mt-4"
+                      placeholder="Upload .csv file"
+                      accept=".csv"
+                      outlined
+                      hide-details
+                      :loading="uploadLoading"
+                      :disabld="!!uploadedDataset"
+                    ></v-file-input>
+                    <v-btn
+                      v-if="!uploadedDataset"
+                      @click="uploadCSV"
+                      class="ml-4"
+                      x-large
+                      color="purple"
+                      dark
+                      >Upload</v-btn
+                    >
+                  </div>
+                </template>
+                <div v-if="uploadedDataset" class="mt-4">
+                  <div class="d-flex mt-4">
+                    <v-text-field
+                      v-model="uploadQ"
+                      outlined
+                      placeholder="Region / City / Province"
+                      prepend-inner-icon="mdi-magnify"
+                      dense
+                      :disabled="loading"
+                    ></v-text-field>
+                    <v-select
+                      v-model="uploadCluster"
+                      :items="datasets ? Array.from({length: uploadedDataset.enhanced.K}, (_, i) => i + 1) : []"
+                      outlined
+                      dense
+                      placeholder="Cluster"
+                      class="ml-5"
+                      style="width: 100px"
+                      clearable
+                    ></v-select>
+                    <v-spacer></v-spacer>
+                    <!-- <v-btn color="success">Export</v-btn> -->
+                  </div>
+                  <v-alert
+                    border="left"
+                    colored-border
+                    type="info"
+                    elevation="2"
+                  >
+                    <span class="d-block info--text text-h6">Metrics</span>
+                        <div v-text="{...uploadedDataset.enhanced.metrics, K:
+                    uploadedDataset.enhanced.K}"></div>
+                  </v-alert>
+                  <v-card :loading="loading">
+                    <div v-if="!datasets" class="pa-5">Please wait ...</div>
+                    <div v-else>
+                      <v-simple-table>
+                        <template #default>
+                          <thead>
+                            <tr>
+                              <th
+                                v-for="(col, i) in Object.keys(uploadedDataset.enhanced.cluster_data[0])"
+                                :key="i"
+                                v-text="col"
+                              ></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="(row, i) in computedUploadDatasets">
+                              <td
+                                v-for="(col, i) in Object.keys(row)"
+                                :key="i"
+                                v-text="row[col]"
+                              ></td>
+                            </tr>
+                          </tbody>
+                        </template>
+                      </v-simple-table>
+                    </div>
+                  </v-card>
+                </div>
+              </div>
+            </template>
+          </v-container>
+        </v-main>
+      </v-app>
+    </div>
+
+    <script>
+      new Vue({
+        el: "#app",
+        vuetify: new Vuetify(),
+        data: () => {
+          return {
+            activeTab: "upload",
+            datasets: null,
+            loading: false,
+            q: "",
+            cluster: "",
+            upload: null,
+            uploadedDataset: null,
+            uploadLoading: false,
+            uploadCluster: "",
+            uploadQ: ""
+          };
+        },
+        computed: {
+          computedDatasets() {
+            return this.datasets.enhanced.cluster_data
+              .filter(data => {
+                return (
+                  (!this.q ||
+                    data.REGION.toLowerCase().includes(this.q.toLowerCase()) ||
+                    data.CITY.toLowerCase().includes(this.q.toLowerCase()) ||
+                    data.PROVINCE.toLowerCase().includes(
+                      this.q.toLowerCase()
+                    )) &&
+                  (!this.cluster || data.CLUSTER + 1 == this.cluster)
+                );
+              })
+              .map(({ CLUSTER, ...data }) => ({
+                ...data,
+                CLUSTER: CLUSTER + 1
+              }));
+          },
+          computedUploadDatasets() {
+            return this.uploadedDataset.enhanced.cluster_data
+              .filter(data => {
+                return (
+                  (!this.uploadQ ||
+                    data.REGION.toLowerCase().includes(
+                      this.uploadQ.toLowerCase()
+                    ) ||
+                    data.CITY.toLowerCase().includes(
+                      this.uploadQ.toLowerCase()
+                    ) ||
+                    data.PROVINCE.toLowerCase().includes(
+                      this.uploadQ.toLowerCase()
+                    )) &&
+                  (!this.uploadCluster ||
+                    data.CLUSTER + 1 == this.uploadCluster)
+                );
+              })
+              .map(({ CLUSTER, ...data }) => ({
+                ...data,
+                CLUSTER: CLUSTER + 1
+              }));
+          }
+        },
+        methods: {
+          async uploadCSV() {
+            if (!this.upload) return;
+            this.uploadLoading = true;
+
+            const formData = new FormData();
+            formData.append("file", this.upload);
+
+            const { data } = await axios.post(
+              "https://covid19-ekfirefly.herokuapp.com/api/kmeans/",
+              formData
+            );
+            this.uploadedDataset = { ...data };
+            this.uploadLoading = false;
+          }
+        },
+        async mounted() {
+          this.loading = true;
+          const { data } = await axios.post(
+            "https://covid19-ekfirefly.herokuapp.com/api/kmeans/"
+          );
+          this.datasets = { ...data };
+          this.loading = false;
+        }
+      });
+    </script>
+  </body>
+</html>
